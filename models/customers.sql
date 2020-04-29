@@ -8,11 +8,16 @@ with customers as (
     select * from {{ ref('stg_customers')}}
 ),
 orders as (
-    select * from {{ ref('stg_orders')}}
+    select * from {{ ref('orders')}}
 ),
 customer_lifetime_value as (
-    select * from {{ ref('customer_lifetime_value')}}
+    select
+        customer_id,
+        sum(order_amount) as lifetime_value
+    from orders
+    group by 1
 ),
+
 customer_orders as (
     select
         customer_id,
