@@ -1,0 +1,44 @@
+version: 2
+
+sources: 
+  - name: jaffle_shop
+    description: A replica of the postgres database
+    database: raw
+    schema: jaffle_shop #optional field.  If not provided, schema will default to name above
+
+    loaded_at_field: _batched_at
+    loader: etl_loader_name
+
+    freshness:
+      warn_after: {count: 12, period: hour}
+      error_after: {count: 24, period: hour}
+
+    tables:
+      - name: customers
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
+      - name: orders
+        description: One record per order
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
+          - name: status
+            description: "{{ doc('order_status') }}"
+            tests:
+              - accepted_values:
+                  values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+
+          - name: user_id
+            description: Foreign key to
+            tests:
+              - not_null
+              - relationships:
+                  to: source('jaffle_shop', 'customers')
+                  field: id
